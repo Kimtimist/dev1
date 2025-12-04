@@ -177,6 +177,10 @@ function getHangulBucket(ch) {
   return "#";
 }
 
+function isLatinName(name) {
+  const first = (name || "").trim()[0] || "";
+  return /[A-Za-z]/.test(first);
+}
 function getArtistInitial(name) {
   const first = name.trim()[0];
   const code = first.charCodeAt(0);
@@ -311,8 +315,18 @@ function renderInitialButtons() {
 function renderArtistList() {
   artistListEl.innerHTML = "";
   const listAll = artistsWithInitial
-    .filter((a) => (activeInitial ? a.initial === activeInitial : true))
-    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  .filter((a) => (activeInitial ? a.initial === activeInitial : true))
+  .sort((a, b) => {
+    const aLatin = isLatinName(a.name);
+    const bLatin = isLatinName(b.name);
+
+    // 영문 아티스트를 먼저 배치
+    if (aLatin && !bLatin) return -1;
+    if (!aLatin && bLatin) return 1;
+
+    // 같은 그룹(둘 다 영문 or 둘 다 한글) 안에서는 이름순 정렬
+    return a.name.localeCompare(b.name, "ko");
+  });
 
   const total = listAll.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
