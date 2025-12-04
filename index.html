@@ -28,13 +28,17 @@
       margin-bottom: 12px;
     }
     .home-icon-button {
-      border: none;
-      background: transparent;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #111827;
       color: #e5e7eb;
-      font-size: 26px; /* 제목 크기급 아이콘 */
+      font-size: 20px;
       cursor: pointer;
-      padding: 4px;
+      padding: 6px 10px;
       line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     h1 {
       font-size: 22px;
@@ -77,12 +81,18 @@
       color: #64748b;
     }
     .search-button {
-      font-size: 13px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #111827;
       color: #e5e7eb;
-      border: none;
-      background: transparent;
+      font-size: 14px;
       cursor: pointer;
-      padding: 4px 0;
+      padding: 6px 10px;
+      min-width: 34px;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* 필터 버튼: 한 줄 스크롤 + filter: 라벨 */
@@ -132,6 +142,11 @@
       font-weight: 600;
       margin-bottom: 6px;
     }
+    /* Artists 타이틀만 30% 정도 크게 */
+    .section-title.artists-title {
+      font-size: 18px;
+    }
+
     .section-caption {
       font-size: 12px;
       color: #9ca3af;
@@ -191,14 +206,17 @@
       padding: 10px 8px;
       border-radius: 10px;
       cursor: pointer;
+      /* 아주 옅은 가로줄 느낌 */
+      box-shadow: inset 0 -1px 0 #1f2937;
     }
     .artist-item.selected {
       background: #0f172a;
       border: 1px solid #0ea5e9;
+      box-shadow: none;
     }
     .artist-name {
       font-weight: 500;
-      font-size: 24px; /* 기존보다 크게 (약 2배 느낌) */
+      font-size: 24px; /* 기존보다 크게 */
     }
     .artist-meta {
       font-size: 12px;
@@ -241,12 +259,12 @@
       margin-bottom: 2px;
     }
 
-    /* 페이지네이션 */
+    /* 페이지네이션: A~Z 버튼과 같은 크기 */
     .artist-pagination {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 10px;
       margin-top: 8px;
       font-size: 12px;
       color: #9ca3af;
@@ -254,15 +272,18 @@
     }
     .page-btn,
     .page-num {
-      padding: 6px 10px;
+      width: 34px;
+      height: 34px;
       border-radius: 999px;
       border: 1px solid #334155;
       background: #1a1a1a;
       color: #e5e7eb;
       cursor: pointer;
-      font-size: 12px;
-      min-width: 34px;
+      font-size: 13px;
       text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .page-btn:disabled {
       opacity: 0.35;
@@ -312,7 +333,7 @@
       margin-top: 3px;
     }
 
-    /* Back 표시 (텍스트는 남겨두고 동작은 history.back) */
+    /* Back 표시 */
     .back-row {
       display: flex;
       align-items: center;
@@ -347,7 +368,7 @@
       background: #1a1a1a;
       padding: 16px 16px 14px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      font-size: 19px; /* 기존 13px 기준 1.5배 정도 */
+      font-size: 19px;
     }
     .modal-header {
       display: flex;
@@ -401,9 +422,9 @@
           <input
             id="searchInput"
             class="search-input"
-            placeholder="Artist / Album / Song / Genre / #tag 통합 검색"
+            placeholder="Search all"
           />
-          <button id="searchButton" class="search-button">Search</button>
+          <button id="searchButton" class="search-button">🔍</button>
         </div>
         <div class="filter-row">
           <span class="filter-label">Filter:</span>
@@ -436,7 +457,7 @@
     <div class="card" id="explorerCard">
       <!-- Artist 페이지 -->
       <div id="artistView">
-        <div class="section-title">Artists</div>
+        <div class="section-title artists-title">Artists</div>
 
         <div style="font-size:12px;color:#9ca3af;margin-bottom:4px;">A–Z</div>
         <div id="latinRow" class="az-row"></div>
