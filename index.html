@@ -28,41 +28,19 @@
       margin-bottom: 12px;
     }
 .home-icon-button {
-  position: relative;
   border-radius: 999px;
   border: 1px solid #4b5563;
   background: #111827;
+  color: #e5e7eb;
+  font-size: 20px;
   cursor: pointer;
-  padding: 6px 10px;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 지붕 */
-.home-icon-button::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border: 2px solid #e5e7eb;
-  border-bottom: none;
-  transform: rotate(45deg);
-  margin-bottom: 2px;
-}
-
-/* 집 몸통 */
-.home-icon-button::after {
-  content: "";
-  position: absolute;
-  bottom: 8px;
-  width: 14px;
-  height: 9px;
-  background: #111827;
-  border: 2px solid #e5e7eb;
-  border-top: none;
-}
     h1 {
       font-size: 22px;
       margin: 0;
@@ -103,38 +81,18 @@
     .search-input::placeholder {
       color: #64748b;
     }
-    .search-button {
-  position: relative;
+.search-button {
   border-radius: 999px;
   border: 1px solid #4b5563;
   background: #111827;
+  color: #e5e7eb;
   cursor: pointer;
-  width: 36px;   /* 검색창 높이에 맞춰 약간 키움 */
+  width: 36px;
   height: 36px;
+  font-size: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-/* 렌즈(동그라미) */
-.search-button::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  border: 2px solid #e5e7eb;
-}
-
-/* 손잡이 */
-.search-button::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: 2px;
-  background: #e5e7eb;
-  transform: rotate(45deg);
-  right: 9px;
-  bottom: 9px;
 }
 
     /* 필터 버튼: 한 줄 스크롤 + filter: 라벨 */
@@ -454,7 +412,7 @@
   <div class="page">
     <!-- 헤더: 집 아이콘 + 타이틀 -->
     <div class="header-row">
-      <button id="homeButton" class="home-icon-button" aria-label="Home"></button>
+      <button id="homeButton" class="home-icon-button" aria-label="Home">🏠</button>
       <h1>My Vinyl Library</h1>
     </div>
 
@@ -467,7 +425,7 @@
             class="search-input"
             placeholder="Search all"
           />
-          <button id="searchButton" class="search-button" aria-label="Search"></button>
+          <button id="searchButton" class="search-button" aria-label="Search">🔍</button>
         </div>
         <div class="filter-row">
           <span class="filter-label">Filter:</span>
