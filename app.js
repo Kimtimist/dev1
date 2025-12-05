@@ -169,9 +169,10 @@ let selectedArtistName = null;
 let selectedAlbumKey = null; // `${artist}__${album}`
 let currentView = "artists"; // 'artists' | 'albums' | 'tracks' | 'search'
 
-// ===== 4. 뷰 전환 & 모달 =====
+// ===== 4. 기본 뷰 제어 =====
 function setView(view) {
   currentView = view;
+
   if (view === "search") {
     explorerCard.style.display = "none";
     searchCard.style.display = "block";
@@ -212,7 +213,33 @@ modalEl.addEventListener("click", (e) => {
   if (e.target === modalEl) closeTrackModal();
 });
 
-// ===== 5. A~Z / 가~하 버튼 & Artist 리스트 =====
+// ===== 5. 라우팅 헬퍼 (hash 기반 내비게이션) =====
+function navigateToArtists() {
+  location.hash = "#artists";
+}
+
+function navigateToAlbums(artist) {
+  const encodedArtist = encodeURIComponent(artist);
+  location.hash = `#albums/${encodedArtist}`;
+}
+
+function navigateToTracks(artist, album) {
+  const encodedArtist = encodeURIComponent(artist);
+  const encodedAlbum = encodeURIComponent(album);
+  location.hash = `#tracks/${encodedArtist}/${encodedAlbum}`;
+}
+
+function navigateToSearch(query) {
+  const q = (query || "").trim();
+  if (!q) {
+    navigateToArtists();
+    return;
+  }
+  const encoded = encodeURIComponent(q);
+  location.hash = `#search/${encoded}`;
+}
+
+// ===== 6. A~Z / 가~하 버튼 & Artist 리스트 =====
 function renderInitialButtons() {
   latinRow.innerHTML = "";
   latinLetters.forEach((ch) => {
@@ -288,10 +315,7 @@ function renderArtistList() {
       row.appendChild(right);
 
       row.addEventListener("click", () => {
-        selectedArtistName = a.name;
-        selectedAlbumKey = null;
-        setView("albums");
-        renderAlbumPage();
+        navigateToAlbums(a.name);
       });
 
       artistListEl.appendChild(row);
@@ -333,7 +357,7 @@ artistNextBtn.addEventListener("click", () => {
   }
 });
 
-// ===== 6. Album / Track 페이지 렌더 =====
+// ===== 7. Album / Track 페이지 렌더 =====
 function renderAlbumPage() {
   albumListPageEl.innerHTML = "";
   if (!selectedArtistName) {
@@ -366,9 +390,7 @@ function renderAlbumPage() {
     item.appendChild(sub);
 
     item.addEventListener("click", () => {
-      selectedAlbumKey = key;
-      setView("tracks");
-      renderTrackPage();
+      navigateToTracks(al.artist, al.title);
     });
 
     albumListPageEl.appendChild(item);
@@ -428,16 +450,21 @@ function renderTrackPage() {
   });
 }
 
+// 백 버튼들: 내부 라우터 사용 대신 history 기반으로 가도 되지만,
+// 일단은 한 단계 상위 라우트로 이동
 backToArtistsBtn.addEventListener("click", () => {
-  setView("artists");
+  navigateToArtists();
 });
 
 backToAlbumsBtn.addEventListener("click", () => {
-  setView("albums");
-  renderAlbumPage();
+  if (selectedArtistName) {
+    navigateToAlbums(selectedArtistName);
+  } else {
+    navigateToArtists();
+  }
 });
 
-// ===== 7. 검색 =====
+// ===== 8. 검색 =====
 function getActiveFilters() {
   const filters = { artist: false, album: false, genre: false, tag: false, song: false };
   document.querySelectorAll("[data-filter]").forEach((input) => {
@@ -458,18 +485,19 @@ function getActiveFilters() {
   return filters;
 }
 
-function runSearch(fromFilterChange = false) {
-  const q = searchInput.value.trim().toLowerCase();
+// 실제 검색 로직 (뷰 전환/해시는 건들지 않음)
+function runSearch(rawQuery) {
+  const qStr = typeof rawQuery === "string" ? rawQuery : searchInput.value;
+  const q = qStr.trim().toLowerCase();
+  const displayQ = qStr.trim();
   const filters = getActiveFilters();
+
   resultsEl.innerHTML = "";
 
   if (!q) {
     searchInfoEl.textContent = "검색어를 입력하거나 필터를 조정해보세요.";
-    setView("artists");
     return;
   }
-
-  setView("search");
 
   const results = [];
 
@@ -544,10 +572,10 @@ function runSearch(fromFilterChange = false) {
   }
 
   if (results.length === 0) {
-    searchInfoEl.textContent = `"${q}"에 해당하는 결과가 없습니다.`;
+    searchInfoEl.textContent = `"${displayQ}"에 해당하는 결과가 없습니다.`;
     return;
   } else {
-    searchInfoEl.textContent = `"${q}" 검색 결과: ${results.length}개`;
+    searchInfoEl.textContent = `"${displayQ}" 검색 결과: ${results.length}개`;
   }
 
   results.forEach((r) => {
@@ -584,17 +612,11 @@ function runSearch(fromFilterChange = false) {
     // 검색 결과 클릭 동작
     item.addEventListener("click", () => {
       if (r.type === "Artist") {
-        selectedArtistName = r.main;
-        selectedAlbumKey = null;
-        setView("albums");
-        renderAlbumPage();
+        navigateToAlbums(r.main);
       } else if (r.type === "Album") {
-        selectedArtistName = r.artist;
-        selectedAlbumKey = `${r.artist}__${r.album}`;
-        setView("tracks");
-        renderTrackPage();
+        navigateToTracks(r.artist, r.album);
       } else if (r.type === "Song") {
-        // SONG 은 바로 팝업
+        // SONG 은 바로 팝업만 띄움 (페이지 이동 X)
         const albumInfo = data.albums.find(
           (al) => al.artist === r.artist && al.title === r.album
         );
@@ -624,44 +646,153 @@ function runSearch(fromFilterChange = false) {
   });
 }
 
-// 검색 이벤트
-searchButton.addEventListener("click", () => runSearch(false));
-searchInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") runSearch(false);
+// 검색 버튼 / 엔터 → 해시 기반 내비게이션
+searchButton.addEventListener("click", () => {
+  const q = searchInput.value.trim();
+  navigateToSearch(q);
 });
-searchInput.addEventListener("input", () => {
-  if (!searchInput.value.trim()) {
-    resultsEl.innerHTML = "";
-    searchInfoEl.textContent = "검색어를 입력하거나 필터를 조정해보세요.";
-    setView("artists");
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const q = searchInput.value.trim();
+    navigateToSearch(q);
   }
 });
 
-// 필터 클릭 시: 비주얼 + 검색 갱신
+// 검색창에서 텍스트 지우면 → artists로 복귀
+searchInput.addEventListener("input", () => {
+  if (!searchInput.value.trim() && currentView === "search") {
+    navigateToArtists();
+  }
+});
+
+// 필터 변경 시, 검색 화면이면 재검색만
 document.querySelectorAll("[data-filter]").forEach((input) => {
   input.addEventListener("change", () => {
     const filters = getActiveFilters();
     if (currentView === "search" && searchInput.value.trim()) {
-      runSearch(true);
+      runSearch(searchInput.value);
     }
   });
 });
 
-// ===== 8. Home 버튼 =====
+// ===== 9. Home 버튼 =====
 homeButton.addEventListener("click", () => {
-  searchInput.value = "";
-  resultsEl.innerHTML = "";
-  searchInfoEl.textContent = "검색어를 입력하거나 필터를 조정해보세요.";
-  selectedArtistName = null;
-  selectedAlbumKey = null;
-  activeInitial = "";
-  currentPage = 1;
-  renderInitialButtons();
-  renderArtistList();
-  setView("artists");
+  navigateToArtists();
 });
 
-// ===== 9. 초기 렌더 =====
+// ===== 10. 모바일 스와이프 → history.back() =====
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+function handleTouchStart(e) {
+  if (!e.touches || e.touches.length === 0) return;
+  const t = e.touches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchEndX = t.clientX;
+  touchEndY = t.clientY;
+}
+
+function handleTouchMove(e) {
+  if (!e.touches || e.touches.length === 0) return;
+  const t = e.touches[0];
+  touchEndX = t.clientX;
+  touchEndY = t.clientY;
+}
+
+function handleTouchEnd() {
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // 가로로 오른쪽으로 일정 이상 스와이프했을 때만 인식
+  if (absDx > 50 && absDx > absDy && dx > 0) {
+    handleSwipeRight();
+  }
+}
+
+function handleSwipeRight() {
+  // 모달 떠 있으면 먼저 모달 닫기
+  if (modalEl.classList.contains("show")) {
+    closeTrackModal();
+    return;
+  }
+
+  // 해시 히스토리가 루트 이상 있을 때만 뒤로가기
+  if (location.hash && location.hash !== "#artists") {
+    history.back();
+  }
+}
+
+// 스와이프 이벤트는 페이지 전체에 붙임
+const pageEl = document.querySelector(".page") || document.body;
+pageEl.addEventListener("touchstart", handleTouchStart, { passive: true });
+pageEl.addEventListener("touchmove", handleTouchMove, { passive: true });
+pageEl.addEventListener("touchend", handleTouchEnd);
+
+// ===== 11. hash 기반 라우터 =====
+function applyRouteFromHash() {
+  let hash = location.hash || "";
+  if (!hash || hash === "#") {
+    // 기본: artists
+    setView("artists");
+    selectedArtistName = null;
+    selectedAlbumKey = null;
+    searchInput.value = "";
+    resultsEl.innerHTML = "";
+    searchInfoEl.textContent = "검색어를 입력하거나 필터를 조정해보세요.";
+    return;
+  }
+
+  hash = hash.replace(/^#/, "");
+  const parts = hash.split("/");
+  const route = parts[0];
+
+  if (route === "artists") {
+    setView("artists");
+    selectedArtistName = null;
+    selectedAlbumKey = null;
+    searchInput.value = "";
+    resultsEl.innerHTML = "";
+    searchInfoEl.textContent = "검색어를 입력하거나 필터를 조정해보세요.";
+  } else if (route === "albums") {
+    const artist = decodeURIComponent(parts[1] || "");
+    selectedArtistName = artist || null;
+    selectedAlbumKey = null;
+    setView("albums");
+    renderAlbumPage();
+  } else if (route === "tracks") {
+    const artist = decodeURIComponent(parts[1] || "");
+    const album = decodeURIComponent(parts[2] || "");
+    selectedArtistName = artist || null;
+    selectedAlbumKey = artist && album ? `${artist}__${album}` : null;
+    setView("tracks");
+    renderTrackPage();
+  } else if (route === "search") {
+    const qEncoded = parts.slice(1).join("/");
+    const q = decodeURIComponent(qEncoded || "");
+    searchInput.value = q;
+    setView("search");
+    runSearch(q);
+  } else {
+    // 알 수 없는 해시면 artists로 복귀
+    navigateToArtists();
+  }
+}
+
+window.addEventListener("hashchange", applyRouteFromHash);
+
+// ===== 12. 초기 렌더 =====
 renderInitialButtons();
 renderArtistList();
-setView("artists");
+
+// 첫 로딩 시 해시 없으면 #artists로 설정
+if (!location.hash) {
+  location.hash = "#artists";
+} else {
+  applyRouteFromHash();
+}
